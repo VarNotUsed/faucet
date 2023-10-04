@@ -118,7 +118,7 @@ export async function invoke<R extends ResponseTypes, T = string>({
 
   let authsCount = simulated.result.auth.length;
   const writeLength = simulated.transactionData.getReadWrite().length;
-  const isViewCall = (authsCount === 0) && (writeLength === 0);
+  const isViewCall = authsCount === 0 && writeLength === 0;
 
   if (isViewCall) {
     if (responseType === "full") {
@@ -155,6 +155,7 @@ export async function invoke<R extends ResponseTypes, T = string>({
     SorobanClient.assembleTransaction(tx, networkPassphrase, simulated).build(),
     networkPassphrase
   );
+  console.log(tx.toXDR());
 
   const raw = await sendTx(tx, secondsToWait, server);
   if (responseType === "full") {
@@ -166,7 +167,9 @@ export async function invoke<R extends ResponseTypes, T = string>({
   if ("resultXdr" in raw) {
     const getResult = raw as SorobanRpc.GetTransactionResponse;
     if (getResult.status !== SorobanRpc.GetTransactionStatus.SUCCESS) {
-      console.error('Transaction submission failed! Returning full RPC response.');
+      console.error(
+        "Transaction submission failed! Returning full RPC response."
+      );
       return raw;
     }
 
@@ -197,14 +200,13 @@ export async function signTx(
   tx: Tx,
   networkPassphrase: string
 ): Promise<Tx> {
-  const signed = await wallet.signTransaction(tx.toXDR(), {
-    networkPassphrase,
-  });
-
-  return SorobanClient.TransactionBuilder.fromXDR(
-    signed,
+  const keypair = SorobanClient.Keypair.fromSecret(process.env.SECRET_KEY);
+  let transaction = SorobanClient.TransactionBuilder.fromXDR(
+    tx.toXDR(),
     networkPassphrase
   ) as Tx;
+  transaction.sign(keypair);
+  return transaction;
 }
 
 /**
@@ -251,17 +253,13 @@ export async function sendTx(
     );
   }
 
-  if (getTransactionResponse.status === SorobanRpc.GetTransactionStatus.NOT_FOUND) {
+  if (
+    getTransactionResponse.status === SorobanRpc.GetTransactionStatus.NOT_FOUND
+  ) {
     console.error(
-      `Waited ${
-        secondsToWait
-      } seconds for transaction to complete, but it did not. ` +
-      `Returning anyway. Check the transaction status manually. ` +
-      `Info: ${JSON.stringify(
-        sendTransactionResponse,
-        null,
-        2
-      )}`
+      `Waited ${secondsToWait} seconds for transaction to complete, but it did not. ` +
+        `Returning anyway. Check the transaction status manually. ` +
+        `Info: ${JSON.stringify(sendTransactionResponse, null, 2)}`
     );
   }
 

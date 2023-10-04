@@ -1,24 +1,29 @@
-// defined this way so typeahead shows full union, not named alias
-let responseTypes: 'simulated' | 'full' | undefined
-export type ResponseTypes = typeof responseTypes
+import { Tx } from "./invoke";
 
-export type XDR_BASE64 = string
+// defined this way so typeahead shows full union, not named alias
+let responseTypes: "simulated" | "full" | undefined;
+export type ResponseTypes = typeof responseTypes;
+
+export type XDR_BASE64 = string;
 
 export interface Wallet {
-  isConnected: () => Promise<boolean>,
-  isAllowed: () => Promise<boolean>,
-  getUserInfo: () => Promise<{ publicKey?: string }>,
-  signTransaction: (tx: XDR_BASE64, opts?: {
-    network?: string,
-    networkPassphrase?: string,
-    accountToSign?: string,
-  }) => Promise<XDR_BASE64>,
+  isConnected: () => Promise<boolean>;
+  isAllowed: () => Promise<boolean>;
+  getUserInfo: () => Promise<{ publicKey?: string }>;
+  signTransaction: (
+    tx: Tx,
+    opts?: {
+      network?: string;
+      networkPassphrase?: string;
+      accountToSign?: string;
+    }
+  ) => Promise<XDR_BASE64>;
 }
 
 export type ClassOptions = {
-  contractId: string
-  networkPassphrase: string
-  rpcUrl: string
+  contractId: string;
+  networkPassphrase: string;
+  rpcUrl: string;
   /**
    * A Wallet interface, such as Freighter, that has the methods `isConnected`, `isAllowed`, `getUserInfo`, and `signTransaction`. If not provided, will attempt to import and use Freighter. Example:
    *
@@ -32,14 +37,14 @@ export type ClassOptions = {
    * })
    * ```
    */
-  wallet?: Wallet
-}
+  wallet?: Wallet;
+};
 
 export type MethodOptions<R extends ResponseTypes> = {
   /**
    * The fee to pay for the transaction. Default: 100.
    */
-  fee?: number
+  fee?: number;
   /**
    * What type of response to return.
    *
@@ -47,9 +52,9 @@ export type MethodOptions<R extends ResponseTypes> = {
    *   - `'simulated'` will only simulate/preflight the transaction, even if it's a change/set method that requires auth/signing. Returns full preflight info.
    *   - `'full'` return the full RPC response, meaning either 1. the preflight info, if it's a view/read method that doesn't require auth/signing, or 2. the `sendTransaction` response, if there's a problem with sending the transaction or if you set `secondsToWait` to 0, or 3. the `getTransaction` response, if it's a change method with no `sendTransaction` errors and a positive `secondsToWait`.
    */
-  responseType?: R
+  responseType?: R;
   /**
    * If the simulation shows that this invocation requires auth/signing, `invoke` will wait `secondsToWait` seconds for the transaction to complete before giving up and returning the incomplete {@link SorobanClient.SorobanRpc.GetTransactionResponse} results (or attempting to parse their probably-missing XDR with `parseResultXdr`, depending on `responseType`). Set this to `0` to skip waiting altogether, which will return you {@link SorobanClient.SorobanRpc.SendTransactionResponse} more quickly, before the transaction has time to be included in the ledger. Default: 10.
    */
-  secondsToWait?: number
-}
+  secondsToWait?: number;
+};
