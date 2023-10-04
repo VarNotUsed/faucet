@@ -1,11 +1,11 @@
 import * as SorobanClient from 'soroban-client';
 import { ContractSpec, Address } from 'soroban-client';
 import { Buffer } from "buffer";
-import { invoke } from './invoke.js';
-import type { ResponseTypes, Wallet, ClassOptions } from './method-options.js'
+import { invoke } from './invoke';
+import type { ResponseTypes, Wallet, ClassOptions } from './method-options'
 
-export * from './invoke.js'
-export * from './method-options.js'
+export * from './invoke'
+export * from './method-options'
 
 export type u32 = number;
 export type i32 = number;
@@ -81,6 +81,7 @@ function parseError(message: string): Err | undefined {
     if (Errors === undefined) {
         return undefined;
     }
+    console.log(Errors);
     return undefined;
 }
 

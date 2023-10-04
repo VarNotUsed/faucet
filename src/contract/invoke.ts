@@ -22,9 +22,13 @@ export type Tx = Transaction<Memo<MemoType>, Operation[]>;
  * selected in Freighter. If not connected to Freighter, return null.
  */
 async function getAccount(
+  wallet: Wallet,
   server: SorobanClient.Server
 ): Promise<Account | null> {
-  const publicKey = "GCDF6RQTW2EZ3FHUN5BBM2ENZYEPHBVPJRSBEKMF2HRXB6GUM5NMAWO4";
+  if (!(await wallet.isConnected()) || !(await wallet.isAllowed())) {
+    return null;
+  }
+  const { publicKey } = await wallet.getUserInfo();
   if (!publicKey) {
     return null;
   }
@@ -66,7 +70,6 @@ export async function invoke<R extends ResponseTypes = undefined, T = string>(
     ? SomeRpcResponse
     : T
 >;
-
 export async function invoke<R extends ResponseTypes, T = string>({
   method,
   args = [],
@@ -76,19 +79,21 @@ export async function invoke<R extends ResponseTypes, T = string>({
   secondsToWait = 10,
   rpcUrl,
   networkPassphrase,
-  contractId
+  contractId,
+  wallet,
 }: InvokeArgs<R, T>): Promise<T | string | SomeRpcResponse> {
+  wallet = wallet;
   let parse = parseResultXdr;
   const server = new SorobanClient.Server(rpcUrl, {
     allowHttp: rpcUrl.startsWith("http://"),
   });
-  const walletAccount = await getAccount(server);
+  const walletAccount = wallet ? await getAccount(wallet, server) : undefined;
 
   // use a placeholder null account if not yet connected to Freighter so that view calls can still work
   const account =
-    walletAccount ||
+    walletAccount ??
     new SorobanClient.Account(
-      "SCSJAL2NQ4UZM5WKFJ43R5VI4IT3HRWV6Q25DKY5K5SPNXS6JGGEZOOF",
+      "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF",
       "0"
     );
 
@@ -137,6 +142,14 @@ export async function invoke<R extends ResponseTypes, T = string>({
     // }
   }
 
+  if (!walletAccount) {
+    throw new Error("Not connected to Freighter");
+  }
+
+  if (!wallet) {
+    throw new Error("Wallet is undefined");
+  }
+
   tx = await signTx(
     wallet,
     SorobanClient.assembleTransaction(tx, networkPassphrase, simulated).build(),
@@ -163,8 +176,8 @@ export async function invoke<R extends ResponseTypes, T = string>({
   // otherwise, it returned the result of `sendTransaction`
   if ("errorResultXdr" in raw) {
     const sendResult = raw as SorobanRpc.SendTransactionResponse;
-      return sendResult.errorResultXdr ? parse(sendResult.errorResultXdr) : '';
-    }
+    return parse(sendResult.errorResultXdr || "");
+  }
 
   // if neither of these are present, something went wrong
   console.error("Don't know how to parse result! Returning full RPC response.");

@@ -51,14 +51,12 @@ export function scValToJs<T>(val: xdr.ScVal): T {
         }
         case xdr.ScValType.scvVec(): {
             type Element = ElementType<T>;
-            // @ts-ignore: Object is possibly 'null'.
             return val.vec().map(v => scValToJs<Element>(v)) as unknown as T;
         }
         case xdr.ScValType.scvMap(): {
             type Key = KeyType<T>;
             type Value = ValueType<T>;
             let res: any = {};
-            // @ts-ignore: Object is possibly 'null'.
             val.map().forEach((e) => {
                 let key = scValToJs<Key>(e.key());
                 let value;
@@ -67,7 +65,6 @@ export function scValToJs<T>(val: xdr.ScVal): T {
                 switch (v?.switch()) {
                     case xdr.ScValType.scvMap(): {
                         let inner_map = new Map() as Map<any, any>;
-                        // @ts-ignore: Object is possibly 'null'.
                         v.map().forEach((e) => {
                             let key = scValToJs<Key>(e.key());
                             let value = scValToJs<Value>(e.val());
