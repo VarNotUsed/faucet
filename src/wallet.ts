@@ -1,6 +1,7 @@
 import { SigningKeypair, walletSdk } from "@stellar/typescript-wallet-sdk";
 import { TransactionBuilder, Networks } from "stellar-sdk";
-import { XDR_BASE64 } from "./contract";
+
+type XDR_BASE64 = string;
 
 export interface Wallet {
   isConnected: () => Promise<boolean>;

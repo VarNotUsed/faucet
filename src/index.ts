@@ -1,7 +1,7 @@
 import "dotenv/config";
 import express, { Request, Response } from "express";
-import { Address, Contract } from "./contract";
 import { OfflineWallet } from "./wallet";
+import * as SorobanClient from "soroban-client";
 
 const app = express();
 app.use(express.json());
@@ -9,24 +9,32 @@ const port = process.env.PORT || 3000;
 
 const wallet = new OfflineWallet();
 
-const tokenContract = new Contract({
-  contractId: process.env.CONTRACT_ID!,
-  networkPassphrase: process.env.NETWORK_PASSPHRASE!,
-  rpcUrl: process.env.RPC_URL!,
-  wallet: wallet,
-});
+let keypair = SorobanClient.Keypair.fromSecret(process.env.SECRET_KEY);
 
 app.get("/fund", async (req: Request, res: Response) => {
   const to = "GCTS3FAKRN4MIOUMXDNM22HUPFM4A6WH4PQ5T2KJLBMYH5IO4F74ALKJ";
   const from = await wallet.getUserInfo();
+  const server = new SorobanClient.Server(process.env.RPC_URL);
+  let account = await server.getAccount(from.publicKey);
 
   try {
-    const transferResult = await tokenContract.transfer({
-      from: Address.fromString(from.publicKey),
-      to: Address.fromString(to),
-      amount: BigInt(100 * 10 ** 7),
-    });
-    console.log(transferResult);
+    let transaction = new SorobanClient.TransactionBuilder(account, {
+      fee: "100",
+      networkPassphrase: SorobanClient.Networks.FUTURENET,
+    })
+      .addOperation(
+        SorobanClient.Operation.payment({
+          destination: to,
+          asset: SorobanClient.Asset.native(),
+          amount: "100",
+        })
+      )
+      .setTimeout(SorobanClient.TimeoutInfinite)
+      .build();
+    transaction.sign(keypair);
+    console.log(transaction);
+    const res = await server.sendTransaction(transaction);
+    console.log(res);
   } catch (error) {
     console.log(error);
   }
