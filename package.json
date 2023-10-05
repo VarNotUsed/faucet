@@ -4,9 +4,14 @@
   "description": "",
   "main": "build/index.js",
   "types": "build/index.d.ts",
+  "pre-commit": [
+    "build",
+    "add-build"
+],
   "scripts": {
     "build": "rimraf build && tsc",
-    "start": "tsc && node build/index.js"
+    "start": "tsc && node build/index.js",
+    "add-build": "git add build"
   },
   "dependencies": {
     "@stellar/typescript-wallet-sdk": "^1.2.0",
@@ -16,6 +21,7 @@
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "express-rate-limit": "^7.1.0",
+    "pre-commit": "^1.2.2",
     "rimraf": "^5.0.5",
     "soroban-client": "1.0.0-beta.2"
   },
