@@ -1,26 +1,29 @@
 import { SigningKeypair, walletSdk } from "@stellar/typescript-wallet-sdk";
 import { TransactionBuilder, Networks } from "stellar-sdk";
-import { XDR_BASE64 } from "./contract";
+
+type XDR_BASE64 = string;
 
 export interface Wallet {
-  isConnected: () => Promise<boolean>,
-  isAllowed: () => Promise<boolean>,
-  getUserInfo: () => Promise<{ publicKey?: string }>,
-  signTransaction: (tx: XDR_BASE64, opts?: {
-    network?: string,
-    networkPassphrase?: string,
-    accountToSign?: string,
-  }) => Promise<XDR_BASE64>,
+  isConnected: () => Promise<boolean>;
+  isAllowed: () => Promise<boolean>;
+  getUserInfo: () => Promise<{ publicKey?: string }>;
+  signTransaction: (
+    tx: XDR_BASE64,
+    opts?: {
+      network?: string;
+      networkPassphrase?: string;
+      accountToSign?: string;
+    }
+  ) => Promise<XDR_BASE64>;
 }
-
 
 export class OfflineWallet implements Wallet {
   private connected: boolean = true;
   private allowed: boolean = true;
-  private userInfo: { publicKey?: string } = { publicKey: process.env.PUBLIC_KEY };
-  private signingKeyPair = SigningKeypair.fromSecret(
-    process.env.SECRET_KEY
-  );
+  private userInfo: { publicKey?: string } = {
+    publicKey: process.env.PUBLIC_KEY,
+  };
+  private signingKeyPair = SigningKeypair.fromSecret(process.env.SECRET_KEY);
 
   async isConnected(): Promise<boolean> {
     // Simulate checking if the wallet is connected
@@ -38,7 +41,7 @@ export class OfflineWallet implements Wallet {
   }
 
   async signTransaction(
-    tx: XDR_BASE64,
+    tx: any,
     opts?: {
       network?: string;
       networkPassphrase?: string;
@@ -52,9 +55,7 @@ export class OfflineWallet implements Wallet {
       );
     }
 
-    const _tx = TransactionBuilder.fromXDR(tx, Networks.FUTURENET);
-
-    const signed = this.signingKeyPair.sign(_tx);
+    const signed = this.signingKeyPair.sign(tx);
 
     // Perform the actual transaction signing logic here
     // For this example, we'll just return the input transaction as signed
