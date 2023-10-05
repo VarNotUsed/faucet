@@ -41,7 +41,7 @@ const limiter = (0, express_rate_limit_1.rateLimit)({
     legacyHeaders: false,
 });
 // Apply the rate limiting middleware to all requests
-app.use(limiter);
+//app.use(limiter)
 const wallet = new wallet_1.OfflineWallet();
 let keypair = SorobanClient.Keypair.fromSecret(process.env.SECRET_KEY);
 app.get("/", async (req, res) => {
