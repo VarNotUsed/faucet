@@ -22,6 +22,10 @@ const wallet = new OfflineWallet();
 
 let keypair = SorobanClient.Keypair.fromSecret(process.env.SECRET_KEY);
 
+app.get("/", async (req: Request, res: Response) => {
+  res.send("Hello World!");
+});
+
 app.post("/fund", async (req: Request, res: Response) => {
   const { to, amount } = req.body;
 
